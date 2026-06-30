@@ -1,0 +1,13 @@
+<%- include('./partials/header', { titulo, paginaAtiva }) %>
+
+<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;text-align:center;gap:1rem;padding:2rem;">
+  <div style="font-size:4.5rem;line-height:1;">🔒</div>
+  <h2 style="font-size:2rem;font-weight:800;color:var(--clr-text-primary);">Acesso Negado</h2>
+  <p style="color:var(--clr-text-muted);max-width:380px;line-height:1.6;">
+    Você não tem permissão para acessar esta página.<br>
+    Apenas <strong style="color:var(--clr-primary)">administradores</strong> podem executar esta ação.
+  </p>
+  <a href="/" class="btn btn--primary" style="margin-top:0.5rem;">← Voltar ao Dashboard</a>
+</div>
+
+<%- include('./partials/footer') %>

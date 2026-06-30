@@ -1,0 +1,12 @@
+<%- include('./partials/header', { titulo, paginaAtiva: '' }) %>
+
+<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;text-align:center;gap:1rem;padding:2rem;">
+  <div style="font-size:5rem;line-height:1;">🔍</div>
+  <h2 style="font-size:2rem;font-weight:800;">Página não encontrada</h2>
+  <p style="color:var(--clr-text-muted);max-width:380px;line-height:1.6;">
+    A página que você está procurando não existe ou foi movida.
+  </p>
+  <a href="/" class="btn btn--primary" style="margin-top:0.5rem;">← Voltar ao Dashboard</a>
+</div>
+
+<%- include('./partials/footer') %>

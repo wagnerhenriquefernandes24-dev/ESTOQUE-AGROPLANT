@@ -1,0 +1,160 @@
+<%- include('../partials/header', { titulo, paginaAtiva }) %>
+
+<div class="form-page">
+  <div class="form-card" id="form-card-produto">
+
+    <div class="form-card-header">
+      <h2 class="form-card-title"><%= produto ? '✏️ Editar Produto' : '📦 Novo Produto' %></h2>
+      <a href="/produtos" class="btn btn--ghost btn--sm">← Voltar</a>
+    </div>
+
+    <% if (erro) { %>
+    <div class="alert alert--erro" role="alert">❌ <%= erro %></div>
+    <% } %>
+
+    <form
+      method="POST"
+      action="/produtos<%= produto ? '/' + produto.id + '/editar' : '' %>"
+      id="form-produto"
+      novalidate
+    >
+      <div class="form-grid">
+
+        <!-- Nome -->
+        <div class="form-group form-group--full">
+          <label for="nome" class="form-label">Nome do Produto <span class="required">*</span></label>
+          <input
+            type="text"
+            id="nome"
+            name="nome"
+            class="form-control"
+            placeholder="Ex: Herbicida Roundup, Fertilizante NPK..."
+            value="<%= produto ? produto.nome : '' %>"
+            required
+            autofocus
+          />
+        </div>
+
+        <!-- Categoria -->
+        <div class="form-group">
+          <label for="categoria" class="form-label">Categoria <span class="required">*</span></label>
+          <input
+            type="text"
+            id="categoria"
+            name="categoria"
+            class="form-control"
+            placeholder="Ex: Defensivos, Fertilizantes, Sementes..."
+            value="<%= produto ? produto.categoria : '' %>"
+            list="categorias-sugestoes"
+            required
+          />
+          <datalist id="categorias-sugestoes">
+            <option value="Defensivos Agrícolas">
+            <option value="Fertilizantes">
+            <option value="Sementes">
+            <option value="Equipamentos">
+            <option value="Combustíveis e Lubrificantes">
+            <option value="Irrigação">
+            <option value="Embalagens">
+            <option value="Outros">
+          </datalist>
+          <span class="form-hint">Digite ou escolha uma categoria sugerida</span>
+        </div>
+
+        <!-- Unidade de Medida -->
+        <div class="form-group">
+          <label for="unidade" class="form-label">Unidade de Medida <span class="required">*</span></label>
+          <div class="select-wrapper">
+            <select id="unidade" name="unidade" class="form-control form-select" required>
+              <option value="" disabled <%= !produto ? 'selected' : '' %>>Selecione a unidade...</option>
+              <% unidades.forEach(u => { %>
+                <option value="<%= u %>" <%= produto && produto.unidade === u ? 'selected' : '' %>><%= u %></option>
+              <% }) %>
+            </select>
+            <span class="select-arrow">▾</span>
+          </div>
+        </div>
+
+        <!-- Quantidade Atual -->
+        <div class="form-group">
+          <label for="quantidade" class="form-label">Quantidade Atual <span class="required">*</span></label>
+          <input
+            type="number"
+            id="quantidade"
+            name="quantidade"
+            class="form-control"
+            placeholder="0"
+            value="<%= produto ? produto.quantidade : '' %>"
+            min="0"
+            step="0.01"
+            required
+          />
+        </div>
+
+        <!-- Quantidade Mínima -->
+        <div class="form-group">
+          <label for="quantidadeMinima" class="form-label">Quantidade Mínima (alerta) <span class="required">*</span></label>
+          <input
+            type="number"
+            id="quantidadeMinima"
+            name="quantidadeMinima"
+            class="form-control"
+            placeholder="0"
+            value="<%= produto ? produto.quantidadeMinima : '' %>"
+            min="0"
+            step="0.01"
+            required
+          />
+          <span class="form-hint">Abaixo deste valor, um alerta será exibido no dashboard</span>
+        </div>
+
+        <!-- Preço Unitário -->
+        <div class="form-group">
+          <label for="preco" class="form-label">Preço Unitário (R$) <span class="required">*</span></label>
+          <div class="input-prefix-wrap">
+            <span class="input-prefix">R$</span>
+            <input
+              type="number"
+              id="preco"
+              name="preco"
+              class="form-control form-control--prefix"
+              placeholder="0,00"
+              value="<%= produto ? produto.preco : '' %>"
+              min="0"
+              step="0.01"
+              required
+            />
+          </div>
+        </div>
+
+      </div><!-- /form-grid -->
+
+      <div class="form-actions">
+        <a href="/produtos" class="btn btn--ghost">Cancelar</a>
+        <button type="submit" class="btn btn--primary btn--lg" id="btn-salvar-produto">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+          <%= produto ? 'Salvar Alterações' : 'Cadastrar Produto' %>
+        </button>
+      </div>
+
+    </form>
+  </div>
+</div>
+
+<script>
+  // Validação client-side básica
+  document.getElementById('form-produto').addEventListener('submit', function(e) {
+    const fields = this.querySelectorAll('[required]');
+    let valid = true;
+    fields.forEach(f => {
+      f.classList.remove('input-error');
+      if (!f.value.trim()) { f.classList.add('input-error'); valid = false; }
+    });
+    if (!valid) {
+      e.preventDefault();
+      fields[0].focus();
+    }
+  });
+</script>
+
+<%- include('../partials/footer') %>

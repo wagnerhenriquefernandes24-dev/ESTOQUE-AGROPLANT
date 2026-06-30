@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="ESTOQUE AGROPLANT – Sistema de Controle de Estoque para o Setor Agrícola" />
+  <title><%= titulo %> | ESTOQUE AGROPLANT</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+
+  <!-- ══ SIDEBAR ══ -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="brand">
+        <span class="brand-icon">🌱</span>
+        <div class="brand-text">
+          <span class="brand-name">AGROPLANT</span>
+          <span class="brand-sub">Estoque</span>
+        </div>
+      </div>
+      <button class="sidebar-toggle" id="sidebarToggle" aria-label="Fechar menu">✕</button>
+    </div>
+
+    <nav class="sidebar-nav" role="navigation" aria-label="Menu principal">
+      <a href="/" class="nav-item <%= paginaAtiva === 'dashboard' ? 'active' : '' %>" id="nav-dashboard">
+        <span class="nav-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        </span>
+        <span class="nav-label">Dashboard</span>
+      </a>
+      <a href="/produtos" class="nav-item <%= paginaAtiva === 'produtos' ? 'active' : '' %>" id="nav-produtos">
+        <span class="nav-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+        </span>
+        <span class="nav-label">Produtos</span>
+      </a>
+      <a href="/movimentacoes" class="nav-item <%= paginaAtiva === 'movimentacoes' ? 'active' : '' %>" id="nav-movimentacoes">
+        <span class="nav-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>
+        </span>
+        <span class="nav-label">Movimentações</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <div class="user-avatar">AG</div>
+        <div class="user-details">
+          <span class="user-name">AgroPlant</span>
+          <span class="user-role">Administrador</span>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ══ OVERLAY para mobile ══ -->
+  <div class="overlay" id="overlay"></div>
+
+  <!-- ══ CONTEÚDO PRINCIPAL ══ -->
+  <div class="main-wrapper">
+    <header class="topbar">
+      <button class="menu-btn" id="menuBtn" aria-label="Abrir menu">
+        <span></span><span></span><span></span>
+      </button>
+      <h1 class="page-title"><%= titulo %></h1>
+      <div class="topbar-right">
+        <span class="date-display" id="dateDisplay"></span>
+      </div>
+    </header>
+
+    <main class="main-content">
+      <%- body %>
+    </main>
+  </div>
+
+  <script>
+    // Data dinâmica
+    const dateEl = document.getElementById('dateDisplay');
+    if (dateEl) {
+      dateEl.textContent = new Date().toLocaleDateString('pt-BR', {
+        weekday: 'long', day: '2-digit', month: 'long', year: 'numeric'
+      });
+    }
+
+    // Sidebar toggle
+    const sidebar  = document.getElementById('sidebar');
+    const overlay  = document.getElementById('overlay');
+    const menuBtn  = document.getElementById('menuBtn');
+    const closeBtn = document.getElementById('sidebarToggle');
+
+    function openSidebar()  { sidebar.classList.add('open'); overlay.classList.add('visible'); }
+    function closeSidebar() { sidebar.classList.remove('open'); overlay.classList.remove('visible'); }
+
+    menuBtn?.addEventListener('click', openSidebar);
+    closeBtn?.addEventListener('click', closeSidebar);
+    overlay?.addEventListener('click', closeSidebar);
+
+    // Auto-dismiss alertas
+    document.querySelectorAll('.alert').forEach(el => {
+      setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 400); }, 5000);
+    });
+  </script>
+</body>
+</html>

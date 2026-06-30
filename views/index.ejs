@@ -1,0 +1,366 @@
+<%- include('./partials/header', { titulo, paginaAtiva }) %>
+
+<!-- ══ FILTROS DE KPI ══ -->
+<div class="filter-container">
+  <div class="filter-group-label text-primary">
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+    <strong>Filtrar Resumo (KPIs):</strong>
+  </div>
+  <form method="GET" action="/" class="filter-form" id="form-filtro-kpi">
+    <!-- Preserva os filtros do gráfico se existirem na URL -->
+    <% if (filtroMes !== new Date().getMonth()) { %><input type="hidden" name="mes" value="<%= filtroMes %>"><% } %>
+    <% if (filtroAno !== new Date().getFullYear()) { %><input type="hidden" name="ano" value="<%= filtroAno %>"><% } %>
+    <% if (filtroProduto) { %><input type="hidden" name="produto" value="<%= filtroProduto %>"><% } %>
+
+    <select name="kpiCategoria" class="select-input select-input--sm" onchange="this.form.submit()" style="max-width: 200px;">
+      <option value="">Todas as categorias</option>
+      <% todasCategorias.forEach(cat => { %>
+        <option value="<%= cat %>" <%= kpiCategoria === cat ? 'selected' : '' %>><%= cat %></option>
+      <% }) %>
+    </select>
+
+    <select name="kpiProduto" class="select-input select-input--sm" onchange="this.form.submit()" style="max-width: 200px;">
+      <option value="">Todos os produtos</option>
+      <% produtos.forEach(p => { %>
+        <option value="<%= p.id %>" <%= kpiProduto === p.id ? 'selected' : '' %>><%= p.nome %></option>
+      <% }) %>
+    </select>
+    
+    <% if (kpiProduto || kpiCategoria) { %>
+      <a href="/?mes=<%= filtroMes %>&ano=<%= filtroAno %>&produto=<%= filtroProduto %>" class="btn btn--ghost btn--xs">Limpar KPIs</a>
+    <% } %>
+  </form>
+</div>
+
+<!-- ══ CARDS KPI ══ -->
+<section class="kpi-grid" aria-label="Resumo do estoque">
+
+  <div class="kpi-card" id="card-total-itens">
+    <div class="kpi-icon kpi-icon--green">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+    </div>
+    <div class="kpi-body">
+      <span class="kpi-value"><%= totalItens %></span>
+      <span class="kpi-label">Total de Produtos</span>
+    </div>
+    <div class="kpi-trend">
+      <a href="/produtos" class="kpi-link">Ver todos →</a>
+    </div>
+  </div>
+
+  <div class="kpi-card" id="card-valor-estoque">
+    <div class="kpi-icon kpi-icon--blue">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+    </div>
+    <div class="kpi-body">
+      <span class="kpi-value">R$ <%= parseFloat(valorEstoque).toLocaleString('pt-BR', {minimumFractionDigits:2}) %></span>
+      <span class="kpi-label">Valor em Estoque</span>
+    </div>
+    <div class="kpi-trend">
+      <span class="kpi-badge kpi-badge--neutral">Atualizado agora</span>
+    </div>
+  </div>
+
+  <div class="kpi-card <%= alertasBaixos > 0 ? 'kpi-card--alert' : '' %>" id="card-alertas">
+    <div class="kpi-icon kpi-icon--<%= alertasBaixos > 0 ? 'red' : 'green' %>">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    </div>
+    <div class="kpi-body">
+      <span class="kpi-value"><%= alertasBaixos %></span>
+      <span class="kpi-label">Alertas de Estoque Baixo</span>
+    </div>
+    <div class="kpi-trend">
+      <% if (alertasBaixos > 0) { %>
+        <span class="kpi-badge kpi-badge--danger">Atenção necessária</span>
+      <% } else { %>
+        <span class="kpi-badge kpi-badge--success">Tudo em ordem</span>
+      <% } %>
+    </div>
+  </div>
+
+</section>
+
+<!-- ══ GRÁFICOS ══ -->
+<section class="charts-grid" aria-label="Gráficos analíticos">
+
+  <div class="chart-card" id="chart-card-movimentos">
+    <div class="chart-header">
+      <div>
+        <h2 class="chart-title">Entradas vs Saídas</h2>
+        <p class="chart-sub">Volume de movimentações por dia</p>
+      </div>
+      <div class="chart-legend">
+        <span class="legend-dot legend-dot--entrada"></span><span>Entradas</span>
+        <span class="legend-dot legend-dot--saida"></span><span>Saídas</span>
+      </div>
+    </div>
+    
+    <!-- Filtros do Gráfico 1 -->
+    <div class="filter-container filter-container--inline">
+      <div class="filter-group-label text-primary">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+        <strong>Filtrar Gráfico:</strong>
+      </div>
+      <form method="GET" action="/" class="filter-form" id="form-filtro-grafico">
+        <select name="mes" class="select-input select-input--sm" onchange="this.form.submit()">
+          <% const meses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']; %>
+          <% meses.forEach((m, i) => { %>
+            <option value="<%= i %>" <%= filtroMes === i ? 'selected' : '' %>><%= m %></option>
+          <% }) %>
+        </select>
+        
+        <select name="ano" class="select-input select-input--sm" onchange="this.form.submit()">
+          <% anosDisponiveis.forEach(ano => { %>
+            <option value="<%= ano %>" <%= filtroAno === ano ? 'selected' : '' %>><%= ano %></option>
+          <% }) %>
+        </select>
+
+        <select name="produto" class="select-input select-input--sm" onchange="this.form.submit()" style="max-width: 200px;">
+          <option value="">Todos os produtos</option>
+          <% produtos.forEach(p => { %>
+            <option value="<%= p.id %>" <%= filtroProduto === p.id ? 'selected' : '' %>><%= p.nome %></option>
+          <% }) %>
+        </select>
+        
+        <% if (filtroProduto || filtroMes !== new Date().getMonth() || filtroAno !== new Date().getFullYear()) { %>
+          <a href="/" class="btn btn--ghost btn--xs">Limpar</a>
+        <% } %>
+      </form>
+    </div>
+
+    <div class="chart-body">
+      <canvas id="chartEntradasSaidas" aria-label="Gráfico de entradas e saídas do mês"></canvas>
+    </div>
+  </div>
+
+  <div class="chart-card" id="chart-card-categorias">
+    <div class="chart-header">
+      <div>
+        <h2 class="chart-title">Distribuição por Categoria</h2>
+        <p class="chart-sub">Quantidade total por categoria</p>
+      </div>
+    </div>
+    <div class="chart-body chart-body--donut">
+      <canvas id="chartCategorias" aria-label="Gráfico de distribuição por categoria"></canvas>
+    </div>
+  </div>
+
+</section>
+
+<!-- ══ ALERTAS DE ESTOQUE BAIXO ══ -->
+<% const produtosAlerta = produtos.filter(p => p.quantidade <= p.quantidadeMinima); %>
+<% if (produtosAlerta.length > 0) { %>
+<section class="section-block" id="section-alertas" aria-label="Produtos com estoque baixo">
+  <div class="section-header">
+    <h2 class="section-title">⚠️ Produtos com Estoque Crítico</h2>
+    <a href="/produtos" class="btn btn--ghost btn--sm">Ver todos</a>
+  </div>
+  <div class="alert-list">
+    <% produtosAlerta.forEach(p => { %>
+    <div class="alert-item">
+      <div class="alert-item-info">
+        <strong><%= p.nome %></strong>
+        <span class="alert-item-cat"><%= p.categoria %></span>
+      </div>
+      <div class="alert-item-qty">
+        <span class="qty-current qty-danger"><%= p.quantidade %></span>
+        <span class="qty-sep">/</span>
+        <span class="qty-min">mín. <%= p.quantidadeMinima %> <%= p.unidade %></span>
+      </div>
+      <a href="/movimentacoes" class="btn btn--primary btn--sm">Repor</a>
+    </div>
+    <% }) %>
+  </div>
+</section>
+<% } %>
+
+<!-- ══ ÚLTIMAS MOVIMENTAÇÕES ══ -->
+<section class="section-block" id="section-movimentacoes">
+  <div class="section-header">
+    <h2 class="section-title">Últimas Movimentações</h2>
+    <a href="/movimentacoes" class="btn btn--ghost btn--sm">Ver todas →</a>
+  </div>
+  <% if (ultimasMovimentacoes.length === 0) { %>
+    <div class="empty-state">
+      <span class="empty-icon">📦</span>
+      <p>Nenhuma movimentação registrada ainda.</p>
+      <a href="/movimentacoes" class="btn btn--primary">Registrar primeira movimentação</a>
+    </div>
+  <% } else { %>
+  <div class="table-wrapper">
+    <table class="data-table" id="table-ultimas-movimentacoes">
+      <thead>
+        <tr>
+          <th>Produto</th>
+          <th>Tipo</th>
+          <th>Quantidade</th>
+          <th>Data</th>
+          <th>Observação</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% ultimasMovimentacoes.forEach(m => { %>
+        <tr>
+          <td><strong><%= m.nomeProduto %></strong></td>
+          <td>
+            <span class="badge badge--<%= m.tipo === 'entrada' ? 'entrada' : 'saida' %>">
+              <%= m.tipo === 'entrada' ? '↑ Entrada' : '↓ Saída' %>
+            </span>
+          </td>
+          <td><%= m.quantidade %></td>
+          <td><%= new Date(m.data).toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit'}) %></td>
+          <td class="text-muted"><%= m.observacao || '—' %></td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+  <% } %>
+</section>
+
+<!-- Chart.js via CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script>
+(function() {
+  // Dados injetados pelo servidor
+  const labelsG1    = <%- labelsGrafico1 %>;
+  const entradas    = <%- entradasPorDia %>;
+  const saidas      = <%- saidasPorDia %>;
+  const labelsG2    = <%- labelsGrafico2 %>;
+  const dadosG2     = <%- dadosGrafico2 %>;
+
+  Chart.defaults.font.family = "'Inter', sans-serif";
+  Chart.defaults.color = '#6B7280';
+
+  // ── Gráfico 1: Entradas vs Saídas ──
+  const ctx1 = document.getElementById('chartEntradasSaidas');
+  if (ctx1) {
+    new Chart(ctx1, {
+      type: 'bar',
+      data: {
+        labels: labelsG1,
+        datasets: [
+          {
+            label: 'Entradas',
+            data: entradas,
+            backgroundColor: 'rgba(46, 125, 50, 0.75)',
+            borderColor: '#2E7D32',
+            borderWidth: 1.5,
+            borderRadius: 4,
+          },
+          {
+            label: 'Saídas',
+            data: saidas,
+            backgroundColor: 'rgba(211, 47, 47, 0.65)',
+            borderColor: '#D32F2F',
+            borderWidth: 1.5,
+            borderRadius: 4,
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#fff',
+            titleColor: '#1a1a2e',
+            bodyColor: '#4B5563',
+            borderColor: '#E5E7EB',
+            borderWidth: 1,
+            padding: 12,
+            callbacks: {
+              label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y}`
+            }
+          }
+        },
+        scales: {
+          x: {
+            grid: { display: false },
+            ticks: { maxTicksLimit: 10, font: { size: 11 } }
+          },
+          y: {
+            beginAtZero: true,
+            grid: { color: '#F3F4F6' },
+            ticks: { stepSize: 1, font: { size: 11 } }
+          }
+        }
+      }
+    });
+  }
+
+  // ── Gráfico 2: Categorias (Donut) ──
+  const ctx2 = document.getElementById('chartCategorias');
+  if (ctx2) {
+    const palette = [
+      '#2E7D32','#1565C0','#E65100','#6A1B9A','#AD1457',
+      '#00695C','#F57F17','#37474F','#558B2F','#0277BD'
+    ];
+    new Chart(ctx2, {
+      type: 'doughnut',
+      data: {
+        labels: labelsG2.length ? labelsG2 : ['Sem dados'],
+        datasets: [{
+          data: dadosG2.length ? dadosG2 : [1],
+          backgroundColor: palette.slice(0, Math.max(labelsG2.length, 1)),
+          borderColor: '#fff',
+          borderWidth: 3,
+          hoverBorderWidth: 4,
+          hoverOffset: 8
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '68%',
+        plugins: {
+          legend: {
+            position: 'right',
+            labels: {
+              padding: 16,
+              usePointStyle: true,
+              pointStyleWidth: 10,
+              font: { size: 12 }
+            }
+          },
+          tooltip: {
+            backgroundColor: '#fff',
+            titleColor: '#1a1a2e',
+            bodyColor: '#4B5563',
+            borderColor: '#E5E7EB',
+            borderWidth: 1,
+            padding: 12
+          }
+        }
+      }
+    });
+  }
+})();
+</script>
+
+<!-- Socket.io: atualização em tempo real do dashboard -->
+<script>
+  document.addEventListener('estoque:atualizado', function(e) {
+    const detail = e.detail || {};
+    const msgs = {
+      movimentacao_registrada: '📦 Nova movimentação registrada',
+      produto_criado:   '✅ Novo produto adicionado',
+      produto_atualizado: '✏️ Produto atualizado',
+      produto_excluido: '🗑️ Produto removido'
+    };
+    const msg = msgs[detail.tipo] || '🔄 Estoque atualizado';
+
+    // Toast flutuante
+    const toast = document.createElement('div');
+    toast.className = 'alert alert--sucesso';
+    toast.style.cssText = 'position:fixed;bottom:1.5rem;right:1.5rem;z-index:9999;min-width:240px;box-shadow:0 8px 24px rgba(0,0,0,0.15);animation:fadeInUp 0.3s ease;';
+    toast.innerHTML = `${msg} — <strong>atualizando...</strong>`;
+    document.body.appendChild(toast);
+
+    setTimeout(() => location.reload(), 1500);
+  });
+</script>
+
+<%- include('./partials/footer') %>

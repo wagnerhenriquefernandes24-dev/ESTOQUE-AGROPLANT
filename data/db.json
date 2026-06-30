@@ -1,0 +1,66 @@
+{
+  "produtos": [
+    {
+      "id": "c439c72c-9d0b-440c-971f-be67f5e52275",
+      "nome": "herbicida",
+      "categoria": "Fertilizantes",
+      "unidade": "Quilogramas (Kg)",
+      "quantidade": 58,
+      "quantidadeMinima": 0,
+      "preco": 12.5,
+      "criadoEm": "2026-06-27T03:46:22.349Z"
+    },
+    {
+      "id": "c8665a57-d69e-4e0b-9235-ef2bdd5c5d2c",
+      "nome": "Sementes de Milho",
+      "categoria": "Sementes",
+      "unidade": "Quilogramas (Kg)",
+      "quantidade": 10,
+      "quantidadeMinima": 2,
+      "preco": 150,
+      "criadoEm": "2026-06-27T06:43:41.732Z"
+    }
+  ],
+  "movimentacoes": [
+    {
+      "id": "4b8160cc-339f-4edf-bcec-fe6fd6f40592",
+      "produtoId": "c439c72c-9d0b-440c-971f-be67f5e52275",
+      "tipo": "entrada",
+      "quantidade": 3,
+      "data": "2026-01-10T20:00:00.000Z",
+      "dataInput": "2026-01-10",
+      "quantidadeAnterior": 50,
+      "quantidadeNova": 53
+    },
+    {
+      "id": "78414fbf-b8fc-423c-921e-b58c24632d17",
+      "produtoId": "c439c72c-9d0b-440c-971f-be67f5e52275",
+      "tipo": "entrada",
+      "quantidade": 5,
+      "data": "2026-06-27T19:00:00.000Z",
+      "dataInput": "2026-06-27",
+      "quantidadeAnterior": 53,
+      "quantidadeNova": 58,
+      "isEmprestimo": true,
+      "nomeEmprestimo": "EmprEmprestimo da Fazenda XYZ"
+    }
+  ],
+  "usuarios": [
+    {
+      "id": "895831d3-2ea7-4426-a494-e86d5855fbc8",
+      "username": "wagner_admin",
+      "passwordHash": "$2b$12$EYuxTxDuzTnV2u/r3stYSOPKlRKztqnBUEScsC6F8iqBm6/Lu5WMC",
+      "role": "admin",
+      "nome": "Administrador",
+      "criadoEm": "2026-06-27T06:28:15.686Z"
+    },
+    {
+      "id": "ee1ed309-124b-4d52-9369-1bd18bc105f2",
+      "username": "viewer",
+      "passwordHash": "$2b$12$EHpYdH3CgjpPuUcthQG/0OJ6w6ly8ySdTkwqb2YMwGCQCV0yYsdOq",
+      "role": "viewer",
+      "nome": "Visualizador",
+      "criadoEm": "2026-06-27T06:28:15.927Z"
+    }
+  ]
+}

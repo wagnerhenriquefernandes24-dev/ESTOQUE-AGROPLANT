@@ -1,0 +1,15 @@
+<%- include('./partials/header', { titulo, paginaAtiva: '' }) %>
+
+<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;text-align:center;gap:1rem;padding:2rem;">
+  <div style="font-size:5rem;line-height:1;">⚠️</div>
+  <h2 style="font-size:2rem;font-weight:800;">Erro interno do servidor</h2>
+  <p style="color:var(--clr-text-muted);max-width:380px;line-height:1.6;">
+    Ocorreu um erro inesperado. Tente novamente em alguns instantes.
+  </p>
+  <% if (mensagem) { %>
+  <pre style="background:var(--clr-bg);border:1px solid var(--clr-border);border-radius:8px;padding:1rem;font-size:12px;max-width:500px;text-align:left;overflow:auto;"><%= mensagem %></pre>
+  <% } %>
+  <a href="/" class="btn btn--primary" style="margin-top:0.5rem;">← Voltar ao Dashboard</a>
+</div>
+
+<%- include('./partials/footer') %>

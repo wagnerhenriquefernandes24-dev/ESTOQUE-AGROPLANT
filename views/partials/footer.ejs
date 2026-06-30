@@ -1,0 +1,79 @@
+    </main><!-- /main-content -->
+  </div><!-- /main-wrapper -->
+
+  <!-- Socket.io client -->
+  <script src="/socket.io/socket.io.js"></script>
+
+  <script>
+    // ── Data no topbar ──
+    const dateEl = document.getElementById('dateDisplay');
+    if (dateEl) {
+      dateEl.textContent = new Date().toLocaleDateString('pt-BR', {
+        weekday: 'long', day: '2-digit', month: 'long', year: 'numeric'
+      });
+    }
+
+    // ── Sidebar toggle ──
+    const sidebar  = document.getElementById('sidebar');
+    const overlay  = document.getElementById('overlay');
+    const menuBtn  = document.getElementById('menuBtn');
+    const closeBtn = document.getElementById('sidebarToggle');
+
+    function openSidebar() {
+      sidebar.classList.add('open');
+      overlay.classList.add('visible');
+      menuBtn.setAttribute('aria-expanded', 'true');
+    }
+    function closeSidebar() {
+      sidebar.classList.remove('open');
+      overlay.classList.remove('visible');
+      menuBtn.setAttribute('aria-expanded', 'false');
+    }
+
+    menuBtn?.addEventListener('click', openSidebar);
+    closeBtn?.addEventListener('click', closeSidebar);
+    overlay?.addEventListener('click', closeSidebar);
+
+    // ── Auto-dismiss alertas ──
+    document.querySelectorAll('.alert').forEach(el => {
+      setTimeout(() => {
+        el.style.transition = 'opacity 0.4s ease';
+        el.style.opacity = '0';
+        setTimeout(() => el.remove(), 400);
+      }, 5000);
+    });
+
+    // ── Confirmar exclusão ──
+    document.querySelectorAll('.form-delete').forEach(form => {
+      form.addEventListener('submit', e => {
+        if (!confirm('Tem certeza que deseja excluir este item? Esta ação não pode ser desfeita.')) {
+          e.preventDefault();
+        }
+      });
+    });
+
+    // ── Socket.io — Tempo Real ──
+    (function() {
+      if (typeof io === 'undefined') return;
+
+      const socket = io();
+
+      socket.on('connect', () => {
+        const badge = document.getElementById('liveBadge');
+        if (badge) badge.style.opacity = '1';
+      });
+
+      socket.on('disconnect', () => {
+        const badge = document.getElementById('liveBadge');
+        if (badge) badge.style.opacity = '0.4';
+      });
+
+      // Escuta atualizações de estoque
+      socket.on('estoque:atualizado', (data) => {
+        // Dispara evento customizado para que cada página possa reagir
+        document.dispatchEvent(new CustomEvent('estoque:atualizado', { detail: data }));
+      });
+    })();
+  </script>
+</body>
+</html>

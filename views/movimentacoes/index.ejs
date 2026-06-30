@@ -1,0 +1,549 @@
+<%- include('../partials/header', { titulo, paginaAtiva }) %>
+
+<% if (mensagem) { %>
+<div class="alert alert--<%= tipoMensagem %>" role="alert">
+  <%= tipoMensagem === 'sucesso' ? '✅' : '❌' %> <%= mensagem %>
+</div>
+<% } %>
+
+<!-- ══ ABAS DE NAVEGAÇÃO ══ -->
+<div class="mov-tabs" role="tablist" aria-label="Abas de movimentação">
+  <% if (user && user.role === 'admin') { %>
+  <button
+    class="mov-tab <%= abaAtiva === 'entrada' ? 'mov-tab--active mov-tab--entrada' : '' %>"
+    id="tab-entrada"
+    role="tab"
+    aria-selected="<%= abaAtiva === 'entrada' %>"
+    aria-controls="panel-entrada"
+    onclick="trocarAba('entrada')"
+  >
+    <span class="mov-tab-icon">↑</span>
+    Entrada de Produto
+  </button>
+  <button
+    class="mov-tab <%= abaAtiva === 'saida' ? 'mov-tab--active mov-tab--saida' : '' %>"
+    id="tab-saida"
+    role="tab"
+    aria-selected="<%= abaAtiva === 'saida' %>"
+    aria-controls="panel-saida"
+    onclick="trocarAba('saida')"
+  >
+    <span class="mov-tab-icon">↓</span>
+    Saída de Produto
+  </button>
+  <% } %>
+  <button
+    class="mov-tab <%= abaAtiva === 'historico' ? 'mov-tab--active' : '' %>"
+    id="tab-historico"
+    role="tab"
+    aria-selected="<%= abaAtiva === 'historico' %>"
+    aria-controls="panel-historico"
+    onclick="trocarAba('historico')"
+  >
+    <span class="mov-tab-icon">📋</span>
+    Histórico Geral
+    <% if (movimentacoes.length > 0) { %>
+    <span class="mov-tab-count"><%= movimentacoes.length %></span>
+    <% } %>
+  </button>
+</div>
+
+<!-- ══ PAINEL: ENTRADA ══ -->
+<% if (user && user.role === 'admin') { %>
+<div
+  id="panel-entrada"
+  class="mov-panel"
+  role="tabpanel"
+  aria-labelledby="tab-entrada"
+  style="display: <%= abaAtiva === 'entrada' ? 'block' : 'none' %>;"
+>
+  <div class="form-card form-card--entrada" id="form-card-entrada">
+    <div class="form-card-header--mov form-card-header--entrada">
+      <div class="form-card-icon-wrap form-card-icon-wrap--entrada">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+      </div>
+      <div>
+        <h2 class="form-card-title">Registrar Entrada</h2>
+        <p class="form-card-sub">Adicionar produto ao estoque</p>
+      </div>
+    </div>
+
+    <% if (produtos.length === 0) { %>
+      <div class="empty-state">
+        <span class="empty-icon">📦</span>
+        <p>Cadastre produtos primeiro.</p>
+        <a href="/produtos/novo" class="btn btn--primary">Cadastrar Produto</a>
+      </div>
+    <% } else { %>
+    <form method="POST" action="/movimentacoes" id="form-entrada">
+      <input type="hidden" name="tipo" value="entrada" />
+
+      <div class="form-row-2">
+        <!-- Produto -->
+        <div class="form-group">
+          <label for="produtoId-entrada" class="form-label">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+            Produto <span class="required">*</span>
+          </label>
+          <div class="select-wrapper">
+            <select id="produtoId-entrada" name="produtoId" class="form-control form-select" required onchange="atualizarInfoProduto(this, 'entrada')">
+              <option value="">Selecione o produto...</option>
+              <% produtos.forEach(p => { %>
+                <option value="<%= p.id %>" data-qtd="<%= p.quantidade %>" data-unidade="<%= p.unidade %>" data-minima="<%= p.quantidadeMinima %>">
+                  <%= p.nome %> — Estoque: <%= p.quantidade %> <%= p.unidade %>
+                </option>
+              <% }) %>
+            </select>
+            <span class="select-arrow">▾</span>
+          </div>
+        </div>
+
+        <!-- Data -->
+        <div class="form-group">
+          <label for="dataMov-entrada" class="form-label">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            Data da Entrada <span class="required">*</span>
+          </label>
+          <input
+            type="date"
+            id="dataMov-entrada"
+            name="dataMov"
+            class="form-control"
+            value="<%= hoje %>"
+            max="<%= hoje %>"
+            required
+          />
+          <span class="form-hint">Permite registros retroativos</span>
+        </div>
+      </div>
+
+      <!-- Info do produto selecionado -->
+      <div class="produto-info-card produto-info-card--entrada" id="produto-info-entrada" style="display:none">
+        <div class="produto-info-item">
+          <span class="produto-info-label">Estoque atual</span>
+          <span class="produto-info-value" id="info-qtd-entrada">—</span>
+        </div>
+        <div class="produto-info-item">
+          <span class="produto-info-label">Unidade</span>
+          <span class="produto-info-value" id="info-unidade-entrada">—</span>
+        </div>
+        <div class="produto-info-item">
+          <span class="produto-info-label">Qtd. mínima</span>
+          <span class="produto-info-value" id="info-minima-entrada">—</span>
+        </div>
+      </div>
+
+      <!-- Quantidade -->
+      <div class="form-group">
+        <label for="quantidade-entrada" class="form-label">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Quantidade a Adicionar <span class="required">*</span>
+        </label>
+        <div class="qty-input-wrap">
+          <input
+            type="number"
+            id="quantidade-entrada"
+            name="quantidade"
+            class="form-control qty-input"
+            placeholder="0"
+            min="0.01"
+            step="0.01"
+            required
+          />
+          <span class="qty-unit" id="qty-unit-entrada">unid.</span>
+        </div>
+      </div>
+
+      <!-- Empréstimo -->
+      <div class="form-group form-group--full" style="background:var(--clr-bg); padding:16px; border-radius:var(--radius-md); border:1px solid var(--clr-border);">
+        <label class="form-label" style="display:flex; align-items:center; gap:8px; cursor:pointer; margin:0;">
+          <input type="checkbox" name="isEmprestimo" onchange="toggleEmprestimo(this, 'entrada')" style="width:18px;height:18px; cursor:pointer;">
+          Esta entrada é um empréstimo ou devolução de empréstimo?
+        </label>
+        <div id="container-emprestimo-entrada" style="display:none; margin-top:12px;">
+          <label class="form-label text-sm text-muted" style="margin-bottom:6px;">De quem é o empréstimo?</label>
+          <input type="text" name="nomeEmprestimo" id="input-emprestimo-entrada" class="form-control" placeholder="Ex: João da Silva, Fazenda São José...">
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="reset" class="btn btn--ghost" onclick="resetForm('entrada')">Limpar</button>
+        <button type="submit" class="btn btn--entrada btn--lg" id="btn-registrar-entrada">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+          Confirmar Entrada
+        </button>
+      </div>
+    </form>
+    <% } %>
+  </div>
+</div>
+
+<!-- ══ PAINEL: SAÍDA ══ -->
+<div
+  id="panel-saida"
+  class="mov-panel"
+  role="tabpanel"
+  aria-labelledby="tab-saida"
+  style="display: <%= abaAtiva === 'saida' ? 'block' : 'none' %>;"
+>
+  <div class="form-card form-card--saida" id="form-card-saida">
+    <div class="form-card-header--mov form-card-header--saida">
+      <div class="form-card-icon-wrap form-card-icon-wrap--saida">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>
+      </div>
+      <div>
+        <h2 class="form-card-title">Registrar Saída</h2>
+        <p class="form-card-sub">Retirar produto do estoque</p>
+      </div>
+    </div>
+
+    <% if (produtos.length === 0) { %>
+      <div class="empty-state">
+        <span class="empty-icon">📦</span>
+        <p>Nenhum produto cadastrado.</p>
+      </div>
+    <% } else { %>
+    <form method="POST" action="/movimentacoes" id="form-saida">
+      <input type="hidden" name="tipo" value="saida" />
+
+      <div class="form-row-2">
+        <!-- Produto -->
+        <div class="form-group">
+          <label for="produtoId-saida" class="form-label">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+            Produto <span class="required">*</span>
+          </label>
+          <div class="select-wrapper">
+            <select id="produtoId-saida" name="produtoId" class="form-control form-select" required onchange="atualizarInfoProduto(this, 'saida')">
+              <option value="">Selecione o produto...</option>
+              <% produtos.forEach(p => { %>
+                <option value="<%= p.id %>" data-qtd="<%= p.quantidade %>" data-unidade="<%= p.unidade %>" data-minima="<%= p.quantidadeMinima %>">
+                  <%= p.nome %> — Estoque: <%= p.quantidade %> <%= p.unidade %>
+                </option>
+              <% }) %>
+            </select>
+            <span class="select-arrow">▾</span>
+          </div>
+        </div>
+
+        <!-- Data -->
+        <div class="form-group">
+          <label for="dataMov-saida" class="form-label">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            Data da Saída <span class="required">*</span>
+          </label>
+          <input
+            type="date"
+            id="dataMov-saida"
+            name="dataMov"
+            class="form-control"
+            value="<%= hoje %>"
+            max="<%= hoje %>"
+            required
+          />
+          <span class="form-hint">Permite registros retroativos</span>
+        </div>
+      </div>
+
+      <!-- Info do produto selecionado -->
+      <div class="produto-info-card produto-info-card--saida" id="produto-info-saida" style="display:none">
+        <div class="produto-info-item">
+          <span class="produto-info-label">Estoque atual</span>
+          <span class="produto-info-value text-danger" id="info-qtd-saida">—</span>
+        </div>
+        <div class="produto-info-item">
+          <span class="produto-info-label">Unidade</span>
+          <span class="produto-info-value" id="info-unidade-saida">—</span>
+        </div>
+        <div class="produto-info-item">
+          <span class="produto-info-label">Qtd. mínima</span>
+          <span class="produto-info-value" id="info-minima-saida">—</span>
+        </div>
+      </div>
+
+      <!-- Quantidade -->
+      <div class="form-group">
+        <label for="quantidade-saida" class="form-label">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Quantidade a Retirar <span class="required">*</span>
+        </label>
+        <div class="qty-input-wrap">
+          <input
+            type="number"
+            id="quantidade-saida"
+            name="quantidade"
+            class="form-control qty-input"
+            placeholder="0"
+            min="0.01"
+            step="0.01"
+            required
+          />
+          <span class="qty-unit" id="qty-unit-saida">unid.</span>
+        </div>
+        <div class="qty-disponivel" id="qty-disponivel-saida" style="display:none">
+          <span>Disponível: <strong id="qty-max-saida">0</strong></span>
+        </div>
+      </div>
+
+      <!-- Empréstimo -->
+      <div class="form-group form-group--full" style="background:var(--clr-bg); padding:16px; border-radius:var(--radius-md); border:1px solid var(--clr-border);">
+        <label class="form-label" style="display:flex; align-items:center; gap:8px; cursor:pointer; margin:0;">
+          <input type="checkbox" name="isEmprestimo" onchange="toggleEmprestimo(this, 'saida')" style="width:18px;height:18px; cursor:pointer;">
+          Esta saída é um empréstimo para alguém?
+        </label>
+        <div id="container-emprestimo-saida" style="display:none; margin-top:12px;">
+          <label class="form-label text-sm text-muted" style="margin-bottom:6px;">Para quem é o empréstimo?</label>
+          <input type="text" name="nomeEmprestimo" id="input-emprestimo-saida" class="form-control" placeholder="Ex: José Carlos, Vizinho...">
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="reset" class="btn btn--ghost" onclick="resetForm('saida')">Limpar</button>
+        <button type="submit" class="btn btn--saida btn--lg" id="btn-registrar-saida">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>
+          Confirmar Saída
+        </button>
+      </div>
+    </form>
+    <% } %>
+  </div>
+</div>
+<% } %>
+
+<!-- ══ PAINEL: VIEWER — somente leitura ══ -->
+<% if (!user || user.role !== 'admin') { %>
+<div class="section-block" style="margin-bottom:1.5rem;">
+  <div class="empty-state" style="padding:1.5rem;">
+    <span class="empty-icon">🔒</span>
+    <p style="color:var(--clr-text-muted);max-width:300px;text-align:center;line-height:1.6;">
+      Perfil <strong>Somente Leitura</strong> — o registro de movimentações requer acesso de <strong>Administrador</strong>.
+    </p>
+  </div>
+</div>
+<% } %>
+
+<!-- ══ PAINEL: HISTÓRICO GERAL ══ -->
+<div
+  id="panel-historico"
+  class="mov-panel"
+  role="tabpanel"
+  aria-labelledby="tab-historico"
+  style="display: <%= abaAtiva === 'historico' ? 'block' : 'none' %>;"
+>
+  <div class="section-block" id="section-historico">
+    <div class="section-header">
+      <h2 class="section-title">Histórico Geral de Movimentações</h2>
+      <div class="filter-group">
+        <form method="GET" action="/movimentacoes" class="filter-form" id="form-filtro-mov">
+          <input type="hidden" name="aba" value="historico" />
+          <select name="tipo" class="select-input select-input--sm" onchange="this.form.submit()" id="filtro-tipo">
+            <option value="" <%= !filtroTipo ? 'selected' : '' %>>Todos os tipos</option>
+            <option value="entrada" <%= filtroTipo === 'entrada' ? 'selected' : '' %>>↑ Entradas</option>
+            <option value="saida"   <%= filtroTipo === 'saida'   ? 'selected' : '' %>>↓ Saídas</option>
+          </select>
+          <select name="produto" class="select-input select-input--sm" onchange="this.form.submit()" id="filtro-produto-historico">
+            <option value="">Todos os produtos</option>
+            <% produtos.forEach(p => { %>
+              <option value="<%= p.id %>" <%= filtroProduto === p.id ? 'selected' : '' %>><%= p.nome %></option>
+            <% }) %>
+          </select>
+          <% if (filtroTipo || filtroProduto) { %>
+            <a href="/movimentacoes?aba=historico" class="btn btn--ghost btn--xs">Limpar</a>
+          <% } %>
+        </form>
+      </div>
+    </div>
+
+    <% if (movimentacoes.length === 0) { %>
+      <div class="empty-state">
+        <span class="empty-icon">🔄</span>
+        <p>Nenhuma movimentação encontrada.</p>
+        <% if (user && user.role === 'admin') { %>
+        <button onclick="trocarAba('entrada')" class="btn btn--primary">Registrar primeira entrada</button>
+        <% } %>
+      </div>
+    <% } else { %>
+    <div class="table-wrapper">
+      <table class="data-table" id="tabela-movimentacoes">
+        <thead>
+          <tr>
+            <th>Data</th>
+            <th>Produto</th>
+            <th>Tipo</th>
+            <th>Quantidade</th>
+            <th>Empréstimo</th>
+            <th>Estoque Anterior</th>
+            <th>Estoque Novo</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% movimentacoes.forEach(m => {
+            // Formata data: usa dataInput se disponível, senão converte data ISO
+            let dataFormatada;
+            if (m.dataInput) {
+              const [ano, mes, dia] = m.dataInput.split('-');
+              dataFormatada = `${dia}/${mes}/${ano}`;
+            } else {
+              const d = new Date(m.data);
+              dataFormatada = d.toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit', year:'numeric' });
+            }
+          %>
+          <tr>
+            <td>
+              <span class="data-pill">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                <%= dataFormatada %>
+              </span>
+            </td>
+            <td><strong><%= m.nomeProduto %></strong></td>
+            <td>
+              <span class="badge badge--<%= m.tipo === 'entrada' ? 'entrada' : 'saida' %>">
+                <%= m.tipo === 'entrada' ? '↑ Entrada' : '↓ Saída' %>
+              </span>
+            </td>
+            <td class="font-semibold <%= m.tipo === 'entrada' ? 'text-success' : 'text-danger' %>">
+              <%= m.tipo === 'entrada' ? '+' : '-' %><%= m.quantidade %> <%= m.unidade %>
+            </td>
+            <td>
+              <% if (m.isEmprestimo) { %>
+                <span class="badge" style="background:#fef3c7; color:#92400e; border:1px solid #fde68a;">
+                  🤝 <%= m.nomeEmprestimo || 'Sim' %>
+                </span>
+              <% } else { %>
+                <span class="text-muted">—</span>
+              <% } %>
+            </td>
+            <td class="text-muted"><%= m.quantidadeAnterior != null ? m.quantidadeAnterior + ' ' + m.unidade : '—' %></td>
+            <td class="font-semibold"><%= m.quantidadeNova != null ? m.quantidadeNova + ' ' + m.unidade : '—' %></td>
+          </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+    <div class="table-footer">
+      <span class="text-muted"><%= movimentacoes.length %> movimentação(ões) encontrada(s)</span>
+    </div>
+    <% } %>
+  </div>
+</div>
+
+<script>
+  // ── Troca de aba ──
+  const ABA_PANELS = { entrada: 'panel-entrada', saida: 'panel-saida', historico: 'panel-historico' };
+  const ABA_TABS   = { entrada: 'tab-entrada',   saida: 'tab-saida',   historico: 'tab-historico'  };
+  const COR_ATIVA  = { entrada: 'mov-tab--entrada', saida: 'mov-tab--saida', historico: '' };
+
+  function trocarAba(aba) {
+    // Oculta todos os painéis
+    Object.values(ABA_PANELS).forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = 'none';
+    });
+
+    // Desativa todas as abas
+    Object.values(ABA_TABS).forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.classList.remove('mov-tab--active', 'mov-tab--entrada', 'mov-tab--saida');
+      el.setAttribute('aria-selected', 'false');
+    });
+
+    // Ativa aba e painel selecionados
+    const panel = document.getElementById(ABA_PANELS[aba]);
+    const tab   = document.getElementById(ABA_TABS[aba]);
+
+    if (panel) panel.style.display = 'block';
+    if (tab) {
+      tab.classList.add('mov-tab--active');
+      if (COR_ATIVA[aba]) tab.classList.add(COR_ATIVA[aba]);
+      tab.setAttribute('aria-selected', 'true');
+    }
+
+    // Atualiza URL sem recarregar
+    const url = new URL(window.location.href);
+    url.searchParams.set('aba', aba);
+    history.replaceState(null, '', url.toString());
+  }
+
+  // ── Atualiza info do produto e unidade no campo qty ──
+  function atualizarInfoProduto(sel, tipo) {
+    const opt  = sel.options[sel.selectedIndex];
+    const info = document.getElementById(`produto-info-${tipo}`);
+    const unit = document.getElementById(`qty-unit-${tipo}`);
+
+    if (!opt.value) {
+      if (info) info.style.display = 'none';
+      return;
+    }
+
+    const qtd     = opt.dataset.qtd;
+    const unidade = opt.dataset.unidade;
+    const minima  = opt.dataset.minima;
+
+    if (info) {
+      document.getElementById(`info-qtd-${tipo}`).textContent    = `${qtd} ${unidade}`;
+      document.getElementById(`info-unidade-${tipo}`).textContent = unidade;
+      document.getElementById(`info-minima-${tipo}`).textContent  = `${minima} ${unidade}`;
+      info.style.display = 'flex';
+    }
+
+    if (unit) unit.textContent = unidade;
+
+    // Para saída: mostra qty disponível e seta max no input
+    if (tipo === 'saida') {
+      const disp = document.getElementById('qty-disponivel-saida');
+      const max  = document.getElementById('qty-max-saida');
+      const inp  = document.getElementById('quantidade-saida');
+      if (disp) disp.style.display = 'block';
+      if (max)  max.textContent    = `${qtd} ${unidade}`;
+      if (inp)  inp.setAttribute('max', qtd);
+    }
+  }
+
+  function resetForm(tipo) {
+    const info = document.getElementById(`produto-info-${tipo}`);
+    if (info) info.style.display = 'none';
+    if (tipo === 'saida') {
+      const disp = document.getElementById('qty-disponivel-saida');
+      if (disp) disp.style.display = 'none';
+    }
+    const containerEmp = document.getElementById(`container-emprestimo-${tipo}`);
+    const inputEmp = document.getElementById(`input-emprestimo-${tipo}`);
+    if (containerEmp) containerEmp.style.display = 'none';
+    if (inputEmp) {
+      inputEmp.value = '';
+      inputEmp.required = false;
+    }
+  }
+
+  // ── Empréstimo toggle ──
+  function toggleEmprestimo(checkbox, tipo) {
+    const container = document.getElementById(`container-emprestimo-${tipo}`);
+    const input = document.getElementById(`input-emprestimo-${tipo}`);
+    
+    if (checkbox.checked) {
+      container.style.display = 'block';
+      input.required = true;
+      input.focus();
+    } else {
+      container.style.display = 'none';
+      input.required = false;
+      input.value = '';
+    }
+  }
+
+  // ── Socket.io: atualiza em tempo real ──
+  document.addEventListener('estoque:atualizado', function(e) {
+    const tipos = ['movimentacao_registrada', 'produto_criado', 'produto_atualizado', 'produto_excluido'];
+    if (tipos.includes(e.detail?.tipo)) {
+      const toast = document.createElement('div');
+      toast.className = 'alert alert--sucesso';
+      toast.style.cssText = 'position:fixed;bottom:1.5rem;right:1.5rem;z-index:9999;min-width:240px;';
+      toast.textContent = '🔄 Estoque atualizado — recarregando...';
+      document.body.appendChild(toast);
+      setTimeout(() => location.reload(), 1400);
+    }
+  });
+</script>
+
+<%- include('../partials/footer') %>
