@@ -47,7 +47,8 @@ router.get('/', async (req, res) => {
     quantidadeAnterior: m.quantidade_anterior,
     quantidadeNova: m.quantidade_nova,
     isEmprestimo: m.is_emprestimo,
-    nomeEmprestimo: m.nome_emprestimo
+    nomeEmprestimo: m.nome_emprestimo,
+    qtd_por_embalagem: m.qtd_por_embalagem
   }));
 
   // Data padrão = hoje no formato YYYY-MM-DD local
@@ -70,7 +71,7 @@ router.get('/', async (req, res) => {
 // ── Registrar movimentação (apenas admin) ──
 router.post('/', requireAdmin, async (req, res) => {
   const db = req.db;
-  const { produtoId, tipo, quantidade, dataMov, isEmprestimo, nomeEmprestimo } = req.body;
+  const { produtoId, tipo, quantidade, dataMov, isEmprestimo, nomeEmprestimo, qtd_por_embalagem } = req.body;
   const qtd = parseFloat(quantidade);
   const idProduto = parseInt(produtoId, 10);
 
@@ -112,9 +113,9 @@ router.post('/', requireAdmin, async (req, res) => {
     // Insere movimentação
     const resultMov = await client.query(
       `INSERT INTO movimentacoes 
-       (produto_id, tipo, quantidade, data, data_input, quantidade_anterior, quantidade_nova, is_emprestimo, nome_emprestimo)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *`,
-      [idProduto, tipo, qtd, dataISO, dataMov, qtdAnterior, qtdNova, flagEmprestimo, flagEmprestimo ? (nomeEmprestimo || '') : null]
+       (produto_id, tipo, quantidade, data, data_input, quantidade_anterior, quantidade_nova, is_emprestimo, nome_emprestimo, qtd_por_embalagem)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *`,
+      [idProduto, tipo, qtd, dataISO, dataMov, qtdAnterior, qtdNova, flagEmprestimo, flagEmprestimo ? (nomeEmprestimo || '') : null, qtd_por_embalagem || null]
     );
 
     await client.query('COMMIT');
@@ -132,7 +133,8 @@ router.post('/', requireAdmin, async (req, res) => {
       quantidadeAnterior: parseFloat(novaMovimentacao.quantidade_anterior),
       quantidadeNova: parseFloat(novaMovimentacao.quantidade_nova),
       isEmprestimo: novaMovimentacao.is_emprestimo,
-      nomeEmprestimo: novaMovimentacao.nome_emprestimo
+      nomeEmprestimo: novaMovimentacao.nome_emprestimo,
+      qtd_por_embalagem: novaMovimentacao.qtd_por_embalagem
     };
 
     // Notifica clientes

@@ -63,7 +63,7 @@ router.get('/novo', requireAdmin, (req, res) => {
 // ── Criar produto (apenas admin) ──
 router.post('/', requireAdmin, async (req, res) => {
   const db = req.db;
-  const { nome, categoria, unidade, quantidade, quantidadeMinima, preco } = req.body;
+  const { nome, categoria, unidade, quantidade, quantidadeMinima, preco, qtd_por_embalagem } = req.body;
 
   if (!nome || !categoria || !unidade || quantidade === '' || quantidadeMinima === '' || preco === '') {
     return res.render('produtos/form', {
@@ -76,15 +76,16 @@ router.post('/', requireAdmin, async (req, res) => {
   }
 
   const result = await db.query(
-    `INSERT INTO produtos (nome, categoria, unidade, quantidade, quantidade_minima, preco)
-     VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
+    `INSERT INTO produtos (nome, categoria, unidade, quantidade, quantidade_minima, preco, qtd_por_embalagem)
+     VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
     [
       nome.trim(),
       categoria.trim(),
       unidade,
       parseFloat(quantidade),
       parseFloat(quantidadeMinima),
-      parseFloat(preco)
+      parseFloat(preco),
+      qtd_por_embalagem || null
     ]
   );
   
@@ -104,8 +105,9 @@ router.get('/:id/editar', requireAdmin, async (req, res) => {
 
   if (!produto) return res.redirect('/produtos?msg=Produto+não+encontrado.&tipo_msg=erro');
   
-  // Mapear snake_case para camelCase para a view (quantidade_minima -> quantidadeMinima)
+  // Mapear snake_case para camelCase para a view
   produto.quantidadeMinima = produto.quantidade_minima;
+  produto.qtd_por_embalagem = produto.qtd_por_embalagem;
 
   res.render('produtos/form', {
     titulo: 'Editar Produto',
@@ -120,12 +122,12 @@ router.get('/:id/editar', requireAdmin, async (req, res) => {
 router.post('/:id/editar', requireAdmin, async (req, res) => {
   const db = req.db;
   const id = parseInt(req.params.id, 10);
-  const { nome, categoria, unidade, quantidade, quantidadeMinima, preco } = req.body;
+  const { nome, categoria, unidade, quantidade, quantidadeMinima, preco, qtd_por_embalagem } = req.body;
 
   const result = await db.query(
     `UPDATE produtos 
-     SET nome = $1, categoria = $2, unidade = $3, quantidade = $4, quantidade_minima = $5, preco = $6, atualizado_em = CURRENT_TIMESTAMP
-     WHERE id = $7 RETURNING *`,
+     SET nome = $1, categoria = $2, unidade = $3, quantidade = $4, quantidade_minima = $5, preco = $6, qtd_por_embalagem = $7, atualizado_em = CURRENT_TIMESTAMP
+     WHERE id = $8 RETURNING *`,
     [
       nome.trim(),
       categoria.trim(),
@@ -133,6 +135,7 @@ router.post('/:id/editar', requireAdmin, async (req, res) => {
       parseFloat(quantidade),
       parseFloat(quantidadeMinima),
       parseFloat(preco),
+      qtd_por_embalagem || null,
       id
     ]
   );

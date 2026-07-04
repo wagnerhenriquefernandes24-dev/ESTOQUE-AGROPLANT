@@ -127,6 +127,19 @@
           </div>
         </div>
 
+        <!-- Embalagem -->
+        <div class="form-group form-group--full">
+          <label for="qtd_por_embalagem" class="form-label">Embalagem <span class="optional">(opcional)</span></label>
+          <input
+            type="text"
+            id="qtd_por_embalagem"
+            name="qtd_por_embalagem"
+            class="form-control"
+            placeholder="Ex: Fardo com 12 un, Caixa com 24, Saco de 50kg..."
+            value="<%= produto ? produto.qtd_por_embalagem : '' %>"
+          />
+        </div>
+
       </div><!-- /form-grid -->
 
       <div class="form-actions">

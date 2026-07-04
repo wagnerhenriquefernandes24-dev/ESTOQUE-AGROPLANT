@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS produtos (
     quantidade DECIMAL(15, 2) NOT NULL DEFAULT 0,
     quantidade_minima DECIMAL(15, 2) NOT NULL DEFAULT 0,
     preco DECIMAL(15, 2) NOT NULL DEFAULT 0,
+    qtd_por_embalagem VARCHAR(255),
     criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     atualizado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -34,5 +35,6 @@ CREATE TABLE IF NOT EXISTS movimentacoes (
     quantidade_nova DECIMAL(15, 2),
     is_emprestimo BOOLEAN DEFAULT false,
     nome_emprestimo VARCHAR(255),
+    qtd_por_embalagem VARCHAR(255),
     criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
