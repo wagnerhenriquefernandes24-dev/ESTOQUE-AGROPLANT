@@ -79,9 +79,9 @@
           <td><span class="tag"><%= p.categoria %></span></td>
           <td class="text-muted"><%= p.unidade %></td>
           <td class="<%= p.quantidade <= p.quantidadeMinima ? 'text-danger' : 'text-success' %> font-semibold">
-            <%= p.quantidade %>
+            <%= parseFloat(p.quantidade).toLocaleString('pt-BR', { maximumFractionDigits: 4 }) %>
           </td>
-          <td class="text-muted"><%= p.quantidadeMinima %></td>
+          <td class="text-muted"><%= parseFloat(p.quantidadeMinima).toLocaleString('pt-BR', { maximumFractionDigits: 4 }) %></td>
           <td>R$ <%= parseFloat(p.preco).toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:4}) %></td>
           <td class="font-semibold">R$ <%= (p.quantidade * p.preco).toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:4}) %></td>
           <td>

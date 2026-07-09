@@ -392,15 +392,16 @@
         </thead>
         <tbody>
           <% movimentacoes.forEach(m => {
-            // Formata data: usa dataInput se disponível, senão converte data ISO
-            let dataFormatada;
+            // Formata data de forma segura, seja string ou objeto Date
+            let d;
             if (m.dataInput) {
-              const [ano, mes, dia] = m.dataInput.split('-');
-              dataFormatada = `${dia}/${mes}/${ano}`;
+              d = new Date(m.dataInput);
+              // Para evitar problema de fuso horário em campos DATE do Postgres (que retornam meia-noite UTC), ajustamos o offset se necessário:
+              d = new Date(d.getTime() + d.getTimezoneOffset() * 60000);
             } else {
-              const d = new Date(m.data);
-              dataFormatada = d.toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit', year:'numeric' });
+              d = new Date(m.data);
             }
+            const dataFormatada = d.toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit', year:'numeric' });
           %>
           <tr>
             <td>
@@ -416,7 +417,7 @@
               </span>
             </td>
             <td class="font-semibold <%= m.tipo === 'entrada' ? 'text-success' : 'text-danger' %>">
-              <%= m.tipo === 'entrada' ? '+' : '-' %><%= m.quantidade %> <%= m.unidade %>
+              <%= m.tipo === 'entrada' ? '+' : '-' %><%= parseFloat(m.quantidade).toLocaleString('pt-BR', { maximumFractionDigits: 4 }) %> <%= m.unidade %>
             </td>
             <td>
               <% if (m.isEmprestimo) { %>
@@ -427,8 +428,8 @@
                 <span class="text-muted">—</span>
               <% } %>
             </td>
-            <td class="text-muted"><%= m.quantidadeAnterior != null ? m.quantidadeAnterior + ' ' + m.unidade : '—' %></td>
-            <td class="font-semibold"><%= m.quantidadeNova != null ? m.quantidadeNova + ' ' + m.unidade : '—' %></td>
+            <td class="text-muted"><%= m.quantidadeAnterior != null ? parseFloat(m.quantidadeAnterior).toLocaleString('pt-BR', { maximumFractionDigits: 4 }) + ' ' + m.unidade : '—' %></td>
+            <td class="font-semibold"><%= m.quantidadeNova != null ? parseFloat(m.quantidadeNova).toLocaleString('pt-BR', { maximumFractionDigits: 4 }) + ' ' + m.unidade : '—' %></td>
           </tr>
           <% }) %>
         </tbody>
