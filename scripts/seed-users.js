@@ -27,10 +27,10 @@ async function seed() {
     
     // ── Remove usuários antigos ─────────────────────────────
     console.log('🧹 Limpando usuários legados (admin, wagner_admin, viewer)...');
-    await db.query(\`
+    await db.query(`
       DELETE FROM usuarios 
       WHERE username IN ('admin', 'wagner_admin', 'viewer')
-    \`);
+    `);
 
     // ── Cria usuários novos ─────────────────────────────────
     const hashAdmin = await bcrypt.hash(ADMIN_PASSWORD, SALT_ROUNDS);

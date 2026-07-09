@@ -82,8 +82,8 @@
             <%= p.quantidade %>
           </td>
           <td class="text-muted"><%= p.quantidadeMinima %></td>
-          <td>R$ <%= parseFloat(p.preco).toLocaleString('pt-BR', {minimumFractionDigits:2}) %></td>
-          <td class="font-semibold">R$ <%= (p.quantidade * p.preco).toLocaleString('pt-BR', {minimumFractionDigits:2}) %></td>
+          <td>R$ <%= parseFloat(p.preco).toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:4}) %></td>
+          <td class="font-semibold">R$ <%= (p.quantidade * p.preco).toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:4}) %></td>
           <td>
             <% if (p.quantidade <= p.quantidadeMinima) { %>
               <span class="badge badge--danger">⚠ Baixo</span>

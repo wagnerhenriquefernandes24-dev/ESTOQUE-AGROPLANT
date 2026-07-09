@@ -63,9 +63,9 @@ router.get('/novo', requireAdmin, (req, res) => {
 // ── Criar produto (apenas admin) ──
 router.post('/', requireAdmin, async (req, res) => {
   const db = req.db;
-  const { nome, categoria, unidade, quantidade, quantidadeMinima, preco, qtd_por_embalagem } = req.body;
+  const { nome, categoria, unidade, quantidadeMinima, preco, qtd_por_embalagem } = req.body;
 
-  if (!nome || !categoria || !unidade || quantidade === '' || quantidadeMinima === '' || preco === '') {
+  if (!nome || !categoria || !unidade || quantidadeMinima === '' || preco === '') {
     return res.render('produtos/form', {
       titulo: 'Novo Produto',
       paginaAtiva: 'produtos',
@@ -82,7 +82,7 @@ router.post('/', requireAdmin, async (req, res) => {
       nome.trim(),
       categoria.trim(),
       unidade,
-      parseFloat(quantidade),
+      0, // Quantidade inicial é sempre 0
       parseFloat(quantidadeMinima),
       parseFloat(preco),
       qtd_por_embalagem || null
@@ -122,17 +122,16 @@ router.get('/:id/editar', requireAdmin, async (req, res) => {
 router.post('/:id/editar', requireAdmin, async (req, res) => {
   const db = req.db;
   const id = parseInt(req.params.id, 10);
-  const { nome, categoria, unidade, quantidade, quantidadeMinima, preco, qtd_por_embalagem } = req.body;
+  const { nome, categoria, unidade, quantidadeMinima, preco, qtd_por_embalagem } = req.body;
 
   const result = await db.query(
     `UPDATE produtos 
-     SET nome = $1, categoria = $2, unidade = $3, quantidade = $4, quantidade_minima = $5, preco = $6, qtd_por_embalagem = $7, atualizado_em = CURRENT_TIMESTAMP
-     WHERE id = $8 RETURNING *`,
+     SET nome = $1, categoria = $2, unidade = $3, quantidade_minima = $4, preco = $5, qtd_por_embalagem = $6, atualizado_em = CURRENT_TIMESTAMP
+     WHERE id = $7 RETURNING *`,
     [
       nome.trim(),
       categoria.trim(),
       unidade,
-      parseFloat(quantidade),
       parseFloat(quantidadeMinima),
       parseFloat(preco),
       qtd_por_embalagem || null,
