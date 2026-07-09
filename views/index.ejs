@@ -163,9 +163,9 @@
         <span class="alert-item-cat"><%= p.categoria %></span>
       </div>
       <div class="alert-item-qty">
-        <span class="qty-current qty-danger"><%= p.quantidade %></span>
+        <span class="qty-current qty-danger"><%= parseFloat(p.quantidade).toLocaleString('pt-BR', { maximumFractionDigits: 4 }) %></span>
         <span class="qty-sep">/</span>
-        <span class="qty-min">mín. <%= p.quantidadeMinima %> <%= p.unidade %></span>
+        <span class="qty-min">mín. <%= parseFloat(p.quantidadeMinima).toLocaleString('pt-BR', { maximumFractionDigits: 4 }) %> <%= p.unidade %></span>
       </div>
       <a href="/movimentacoes" class="btn btn--primary btn--sm">Repor</a>
     </div>
@@ -207,7 +207,7 @@
               <%= m.tipo === 'entrada' ? '↑ Entrada' : '↓ Saída' %>
             </span>
           </td>
-          <td><%= m.quantidade %></td>
+          <td><%= parseFloat(m.quantidade).toLocaleString('pt-BR', { maximumFractionDigits: 4 }) %></td>
           <td><%= new Date(m.data).toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit'}) %></td>
           <td class="text-muted"><%= m.observacao || '—' %></td>
         </tr>
